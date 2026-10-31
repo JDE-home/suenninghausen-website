@@ -1,16 +1,45 @@
 // End-to-End-Test: startet den gebauten Server (npm run build zuerst!) und prüft den Verwaltungsbereich.
-import { test, before, after } from 'node:test';
+import { test, before, after, describe } from 'node:test';
+import http from 'node:http';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-const PORT = 4399;
-const BASE = `http://127.0.0.1:${PORT}`;
+// Minimaler Upstash-Redis-Ersatz (REST): versteht GET, SET, DEL.
+function fakeRedis(token) {
+  const store = new Map();
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      if (req.headers.authorization !== `Bearer ${token}`) { res.writeHead(401).end(JSON.stringify({ error: 'unauthorized' })); return; }
+      const [cmd, key, value] = JSON.parse(body);
+      let result = null;
+      if (cmd === 'GET') result = store.get(key) ?? null;
+      else if (cmd === 'SET') { store.set(key, value); result = 'OK'; }
+      else if (cmd === 'DEL') result = store.delete(key) ? 1 : 0;
+      else { res.writeHead(400).end(JSON.stringify({ error: `unbekannt: ${cmd}` })); return; }
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ result }));
+    });
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, store, url: `http://127.0.0.1:${server.address().port}` })));
+}
+
 const PW = 'test-passwort-123';
-const dataDir = mkdtempSync(path.join(tmpdir(), 'sh-test-'));
-let server;
+async function startServer(port, extraEnv) {
+  const dataDir = mkdtempSync(path.join(tmpdir(), 'sh-test-'));
+  const child = spawn('node', ['dist/server/entry.mjs'], { env: { ...process.env, HOST: '127.0.0.1', PORT: String(port), DATA_DIR: dataDir, ADMIN_USER: 'admin', ADMIN_PASSWORD: PW, ...extraEnv }, stdio: 'ignore' });
+  for (let i = 0; i < 50; i++) { try { await fetch(`http://127.0.0.1:${port}/`); return { child, dataDir }; } catch { await new Promise((r) => setTimeout(r, 200)); } }
+  child.kill();
+  throw new Error('Server startet nicht');
+}
+
+for (const [mode, PORT] of [['Dateispeicher (Docker/VPS)', 4399], ['Redis (Vercel)', 4398]]) describe(`Speicher: ${mode}`, () => {
+const BASE = `http://127.0.0.1:${PORT}`;
+const redisMode = mode.startsWith('Redis');
+let server, dataDir, redis;
 let cookie = '';
 
 const req = (url, opts = {}) => fetch(BASE + url, { redirect: 'manual', ...opts, headers: { ...(cookie ? { cookie } : {}), ...opts.headers } });
@@ -18,12 +47,17 @@ const form = (url, data) => req(url, { method: 'POST', headers: { 'content-type'
 const csrf = async (url = '/admin/') => (await (await req(url)).text()).match(/name="_csrf" value="([^"]+)"/)?.[1];
 const eventData = (over = {}) => ({ title: 'Testfest', start: '2030-05-04', end: '', time: '18:30', location: 'Dorfplatz', club: 'heimatverein', category: 'dorfleben', description: 'Ein Test.', ...over });
 
+
 before(async () => {
-  server = spawn('node', ['dist/server/entry.mjs'], { env: { ...process.env, HOST: '127.0.0.1', PORT: String(PORT), DATA_DIR: dataDir, ADMIN_USER: 'admin', ADMIN_PASSWORD: PW }, stdio: 'ignore' });
-  for (let i = 0; i < 50; i++) { try { await fetch(BASE + '/'); return; } catch { await new Promise((r) => setTimeout(r, 200)); } }
-  throw new Error('Server startet nicht');
+  const extra = {};
+  if (redisMode) {
+    redis = await fakeRedis('geheim-token');
+    extra.KV_REST_API_URL = redis.url;
+    extra.KV_REST_API_TOKEN = 'geheim-token';
+  }
+  ({ child: server, dataDir } = await startServer(PORT, extra));
 });
-after(() => { server?.kill(); rmSync(dataDir, { recursive: true, force: true }); });
+after(() => { server?.kill(); redis?.server.close(); rmSync(dataDir, { recursive: true, force: true }); });
 
 test('Verwaltung ohne Login ist gesperrt', async () => {
   const r = await req('/admin/');
@@ -143,4 +177,32 @@ test('Nach 5 Fehlversuchen wird die Anmeldung kurz gesperrt', async () => {
   for (let i = 0; i < 5; i++) await form('/admin/login/', { name: 'admin', password: 'x'.repeat(12) });
   const r = await form('/admin/login/', { name: 'admin', password: 'neues-passwort-456' });
   assert.match(await r.text(), /Zu viele Fehlversuche/);
+});
+
+if (redisMode) {
+  test('Daten liegen in Redis – nicht auf der Festplatte', () => {
+    for (const key of ['sh:content', 'sh:users', 'sh:secret', 'sh:history:index']) assert.ok(redis.store.has(key), `${key} fehlt in Redis`);
+    assert.deepEqual(readdirSync(dataDir), []);
+  });
+}
+
+});
+
+describe('Vercel ohne verbundenen Speicher', () => {
+  const PORT2 = 4397;
+  let srv, dir;
+  before(async () => { ({ child: srv, dataDir: dir } = await startServer(PORT2, { VERCEL: '1' })); });
+  after(() => { srv?.kill(); rmSync(dir, { recursive: true, force: true }); });
+
+  test('öffentliche Seite funktioniert (schreibgeschützt, Beispieldaten)', async () => {
+    const r = await fetch(`http://127.0.0.1:${PORT2}/termine/`);
+    assert.equal(r.status, 200);
+    assert.match(await r.text(), /Adventsbasar/);
+  });
+  test('Verwaltung zeigt eine Einrichtungs-Anleitung statt eines Fehlers', async () => {
+    const r = await fetch(`http://127.0.0.1:${PORT2}/admin/login/`, { redirect: 'manual' });
+    assert.equal(r.status, 503);
+    assert.match(await r.text(), /Upstash Redis/);
+    assert.deepEqual(readdirSync(dir), []); // es wurde nichts auf die (schreibgeschützte) Platte geschrieben
+  });
 });

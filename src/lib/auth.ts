@@ -1,9 +1,7 @@
 // Anmeldung: scrypt-Passwort-Hashes, signierte Session-Cookies, CSRF-Token, Login-Sperre.
 import crypto from 'node:crypto';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import { promisify } from 'node:util';
-import { dataDir } from './store';
+import { backend } from './backend';
 import { env } from './env';
 
 const scrypt = promisify(crypto.scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
@@ -13,7 +11,6 @@ export const SESSION_COOKIE = 'sh_admin';
 export const SESSION_HOURS = 12;
 export const MIN_PASSWORD = 10;
 
-const usersFile = () => path.join(dataDir(), 'users.json');
 let usersQueue: Promise<unknown> = Promise.resolve();
 
 export async function hashPassword(pw: string): Promise<string> {
@@ -31,13 +28,10 @@ export async function verifyPassword(pw: string, stored: string): Promise<boolea
 }
 
 async function readUsers(): Promise<User[]> {
-  try { return JSON.parse(await fs.readFile(usersFile(), 'utf8')) as User[]; } catch { return []; }
+  try { return JSON.parse((await backend().get('users')) ?? '[]') as User[]; } catch { return []; }
 }
 async function writeUsers(users: User[]) {
-  await fs.mkdir(dataDir(), { recursive: true });
-  const tmp = `${usersFile()}.${process.pid}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(users, null, 2), { mode: 0o600 });
-  await fs.rename(tmp, usersFile());
+  await backend().set('users', JSON.stringify(users));
 }
 const lockedUsers = <T>(fn: () => Promise<T>) => { const r = usersQueue.then(fn, fn); usersQueue = r.catch(() => undefined); return r; };
 
@@ -82,14 +76,13 @@ async function secret(): Promise<Buffer> {
   if (secretCache) return secretCache;
   const fromEnv = env('SESSION_SECRET');
   if (fromEnv && fromEnv.length >= 32) return (secretCache = Buffer.from(fromEnv));
-  const file = path.join(dataDir(), 'secret.key');
-  try { secretCache = Buffer.from((await fs.readFile(file, 'utf8')).trim(), 'hex'); }
-  catch {
-    secretCache = crypto.randomBytes(32);
-    await fs.mkdir(dataDir(), { recursive: true });
-    await fs.writeFile(file, secretCache.toString('hex'), { mode: 0o600 });
-  }
-  return secretCache;
+  // Ohne SESSION_SECRET wird einmalig ein Schlüssel erzeugt und im Speicher abgelegt (übersteht Neustarts/Instanzen).
+  const stored = await backend().get('secret');
+  if (stored && /^[0-9a-f]{64}$/.test(stored.trim())) return (secretCache = Buffer.from(stored.trim(), 'hex'));
+  const fresh = crypto.randomBytes(32);
+  await backend().set('secret', fresh.toString('hex'));
+  const winner = (await backend().get('secret'))?.trim() ?? ''; // bei gleichzeitigem Start gewinnt der zuletzt geschriebene
+  return (secretCache = /^[0-9a-f]{64}$/.test(winner) ? Buffer.from(winner, 'hex') : fresh);
 }
 const sign = async (data: string) => crypto.createHmac('sha256', await secret()).update(data).digest('base64url');
 const safeEqual = (a: string, b: string) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
