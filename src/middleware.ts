@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { storageMissing } from './lib/backend';
 import { SESSION_COOKIE, checkCsrf, ensureAdmin, readSession } from './lib/auth';
 
 const CSP = [
@@ -6,9 +7,23 @@ const CSP = [
   "frame-ancestors 'none'", "base-uri 'self'", "form-action 'self'",
 ].join('; ');
 
+const SETUP_PAGE = `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speicher einrichten</title>
+<body style="font:17px/1.6 system-ui;max-width:42rem;margin:8vh auto;padding:0 16px;color:#2b2420">
+<h1>Verwaltung: Speicher noch nicht eingerichtet</h1>
+<p>Auf Vercel gibt es kein dauerhaftes Dateisystem. Damit Termine gespeichert werden können, braucht die Seite eine Redis-Datenbank:</p>
+<ol><li>In Vercel: <b>Storage → Marketplace → Upstash Redis</b> (kostenloser Tarif reicht) anlegen und mit diesem Projekt verbinden.</li>
+<li>Unter <b>Settings → Environment Variables</b> <code>ADMIN_USER</code> und <code>ADMIN_PASSWORD</code> (mind. 10 Zeichen) setzen.</li>
+<li>Neu deployen (Deployments → ⋯ → Redeploy).</li></ol>
+<p>Bis dahin zeigt die öffentliche Seite nur die Beispieldaten. <a href="/">Zur Website</a></p></body></html>`;
+
 export const onRequest = defineMiddleware(async (ctx, next) => {
   const path = ctx.url.pathname;
   const isAdmin = path === '/admin' || path.startsWith('/admin/');
+
+  if (isAdmin && storageMissing()) {
+    return new Response(SETUP_PAGE, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
+  }
 
   if (isAdmin) {
     await ensureAdmin();

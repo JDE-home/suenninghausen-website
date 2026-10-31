@@ -34,13 +34,13 @@ cp .env.example .env     # ADMIN_USER / ADMIN_PASSWORD eintragen (mind. 10 Zeich
 npm run dev              # http://localhost:4321  →  Verwaltung: /admin/
 ```
 
-Produktion: `npm run build && npm start` oder per Docker (`docker compose up -d --build`, siehe `docker-compose.yml`).
-Beim ersten Start werden die Beispieldaten aus `src/data/` übernommen; danach liegen alle Inhalte im Verzeichnis
-`DATA_DIR` (Standard `./data`). **Dieses Verzeichnis regelmäßig sichern** – es enthält Termine, Vereine, Verlauf und Benutzer.
+Produktion: Vercel (siehe „Hosting“) oder `npm run build && npm start` bzw. Docker (`docker compose up -d --build`).
+Beim ersten Start werden die Beispieldaten aus `src/data/` übernommen. Bei Vercel liegen die Inhalte in Redis, sonst im Verzeichnis
+`DATA_DIR` (Standard `./data`). **Dieses Verzeichnis bzw. die Datenbank sichern** – sie enthalten Termine, Vereine, Verlauf und Benutzer.
 
 ### Passwort vergessen?
 
-`data/users.json` löschen und den Server mit gesetztem `ADMIN_PASSWORD` neu starten – der Administrator wird neu angelegt.
+Bei Dateispeicher `data/users.json` löschen, bei Redis den Schlüssel `sh:users` löschen (Upstash-Konsole), dann mit gesetztem `ADMIN_PASSWORD` neu starten bzw. neu deployen – der Administrator wird neu angelegt.
 
 ### Sicherheit
 
@@ -51,8 +51,23 @@ Eingaben werden serverseitig geprüft und beim Anzeigen maskiert; strikte Conten
 
 ### Hosting
 
-Die Seite braucht einen Node-Server mit dauerhaftem Speicher (kleiner VPS, Docker-Host, Railway/Fly.io/Render mit Volume).
-Reine „Serverless“-Hoster (Vercel, Netlify) eignen sich dafür **nicht**, weil dort keine Dateien dauerhaft gespeichert werden.
+Die Seite läuft an zwei Orten, der Speicher passt sich automatisch an:
+
+| Ziel | Speicher | Einrichtung |
+|---|---|---|
+| **Vercel** | Upstash Redis (kostenloser Tarif reicht) | siehe unten |
+| **Docker / VPS** | Dateien in `DATA_DIR` | `docker compose up -d --build` |
+
+**Vercel einrichten (einmalig):**
+
+1. Projekt in Vercel aus dem GitHub-Repository importieren (Framework „Astro“ wird erkannt; der Vercel-Adapter wird beim Build automatisch gewählt).
+2. In Vercel unter **Storage → Marketplace → Upstash Redis** eine Datenbank anlegen und mit dem Projekt verbinden. Dabei werden `KV_REST_API_URL` und `KV_REST_API_TOKEN` automatisch gesetzt.
+3. Unter **Settings → Environment Variables** `ADMIN_USER` und `ADMIN_PASSWORD` (mind. 10 Zeichen) setzen, optional `SITE_URL` (z. B. `https://suenninghausen.de`).
+4. **Redeploy** auslösen. Danach unter `/admin/` anmelden und das Passwort ändern.
+
+Solange kein Redis verbunden ist, zeigt die öffentliche Seite nur die Beispieldaten, und `/admin/` erklärt, was zu tun ist.
+Hinweis: Preview-Deployments, die mit derselben Redis-Datenbank verbunden sind, teilen sich die Inhalte mit der Live-Seite.
+Gleichzeitiges Speichern durch zwei Administratoren im selben Moment ist nicht abgesichert (der zuletzt gespeicherte Stand gewinnt); der Verlauf erlaubt jederzeit die Wiederherstellung.
 
 ### Weitere Inhalte
 
@@ -63,4 +78,5 @@ Fotos kommen nach `src/assets/photos/` (siehe dortige README).
 
 ```bash
 npm test     # baut die Seite und prüft Login, Rechte, CSRF, Termine, Serien, Verlauf, Sperre …
+             # jeweils mit Dateispeicher und mit (simuliertem) Redis, plus Vercel ohne Speicher
 ```

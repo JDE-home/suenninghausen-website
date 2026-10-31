@@ -40,10 +40,10 @@ im Verlauf abgelegt und lässt sich wiederherstellen. Interaktivität (Filter) l
 | Schicht | Wahl | Alternative, falls nötig |
 |---|---|---|
 | Frontend | Astro, eigenes CSS (keine Frameworks) | – |
-| Daten | `data/content.json` + `data/history/` (Termine, Vereine), `src/data/*.json` (Kategorien, Links, Galerie) | SQLite/Postgres bei größerem Bedarf |
+| Daten | Schlüssel/Wert-Speicher: Redis (Vercel) oder `data/*.json` (Docker/VPS) für Termine, Vereine, Verlauf, Benutzer; `src/data/*.json` für Kategorien, Links, Galerie | Postgres bei größerem Bedarf |
 | Backend | Astro-Server: Admin-Bereich, Login (scrypt, signierte Cookies, CSRF-Schutz), iCal-Feed | – |
 | Pflege | Verwaltung unter `/admin/` (Termine, Serien, Vereine, Verlauf) | Formular „Termin melden" mit Freigabe |
-| Hosting | Docker/VPS oder Plattform mit dauerhaftem Volume (kein Vercel/Netlify), HTTPS per Reverse-Proxy | – |
+| Hosting | Vercel (Upstash Redis als Speicher) **oder** Docker/VPS (Dateispeicher); der Speicher wird automatisch gewählt | Railway/Fly/Render mit Volume |
 
 ## 4. Informationsarchitektur
 
