@@ -1,0 +1,22 @@
+---
+import { dateParts, getCategory, getClub, type VillageEvent } from '../lib/data';
+const { event } = Astro.props as { event: VillageEvent };
+const cat = getCategory(event.category);
+const club = getClub(event.club);
+const p = dateParts(event);
+---
+<li class="event" data-cat={event.category} style={`--cat:${cat.color}`}>
+  <div class="date" aria-hidden="true">
+    <span class="d">{p.day}</span>
+    <span class="m">{p.month}</span>
+  </div>
+  <div>
+    <h3>{event.title}{event.demo && <span class="demo-tag" title={event.note ?? 'Beispieltermin'}>Beispiel</span>}</h3>
+    <p class="meta">
+      <span class="tag">{cat.label}</span>
+      <time datetime={event.start}>{p.long}</time>{event.time && <> · {event.time} Uhr</>}{' '}· {event.location}
+    </p>
+    <p>{event.description}</p>
+    <p class="meta">Veranstalter: {club.url ? <a href={club.url} rel="noopener">{club.name}</a> : club.name}</p>
+  </div>
+</li>

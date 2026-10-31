@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+import Skyline from '../components/Skyline.astro';
+import EventCard from '../components/EventCard.astro';
+import ClubCard from '../components/ClubCard.astro';
+import { upcomingEvents, clubs, dateParts, getClub } from '../lib/data';
+
+const events = upcomingEvents();
+const [next, ...rest] = events;
+const soon = rest.slice(0, 4);
+---
+<Base>
+  <section class="hero">
+    <div class="wrap">
+      <h1>Willkommen in Sünninghausen</h1>
+      <p class="lead">Das Dorf im Münsterland bei Oelde – hier finden Sie, was bei uns los ist.</p>
+      <div class="btn-row">
+        <a class="btn" href="/termine/">Alle Termine</a>
+        <a class="btn ghost" href="/vereine/">Vereine &amp; Links</a>
+      </div>
+    </div>
+    <div class="wrap" style="padding:0"><Skyline /></div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Als Nächstes im Dorf</h2>
+        <a href="/termine/">Alle Termine ansehen →</a>
+      </div>
+      {next && (
+        <div class="next">
+          <span class="eyebrow">Nächster Termin</span>
+          <h3>{next.title}</h3>
+          <span>{dateParts(next).long}{next.time && <> · {next.time} Uhr</>} · {next.location}</span>
+          <span>{next.description}</span>
+          <span>Veranstalter: {getClub(next.club).name}</span>
+        </div>
+      )}
+      <ul class="events" style="margin-top:14px">
+        {soon.map((e) => <EventCard event={e} />)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Vereine &amp; Institutionen</h2>
+        <a href="/vereine/">Alle ansehen →</a>
+      </div>
+      <div class="grid">
+        {clubs.slice(0, 4).map((c) => <ClubCard club={c} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap prose">
+      <h2>Unser Dorf</h2>
+      <p>
+        Sünninghausen liegt rund sieben Kilometer südlich der Oelder Kernstadt. Schon im Jahr 890 wurde der Ort im
+        Urbar des Klosters Werden erwähnt. Heute prägen Schützenfest, Heimatverein und der
+        einzige Karnevalsumzug Oeldes das Dorfleben.
+      </p>
+      <a class="btn ghost" href="/dorf/">Mehr über Sünninghausen</a>
+    </div>
+  </section>
+</Base>

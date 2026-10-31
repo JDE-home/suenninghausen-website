@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+interface Props { title?: string; description?: string }
+const { title, description = 'Termine, Vereine und Neuigkeiten aus Sünninghausen, Ortsteil von Oelde im Münsterland.' } = Astro.props;
+const fullTitle = title ? `${title} · Sünninghausen` : 'Sünninghausen – Das Dorf bei Oelde';
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/', label: 'Start' },
+  { href: '/termine/', label: 'Termine' },
+  { href: '/vereine/', label: 'Vereine' },
+  { href: '/dorf/', label: 'Unser Dorf' },
+];
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="text/calendar" title="Dorfkalender" href="/termine.ics" />
+  </head>
+  <body>
+    <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+    <div class="demo-banner" role="note">
+      Entwurf mit Beispielinhalten – Termine und Vereins-Links sind teilweise erfunden und mit „Beispiel“ markiert.
+    </div>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="/"><span aria-hidden="true">⛪</span> Sünninghausen</a>
+        <nav class="nav" aria-label="Hauptnavigation">
+          {nav.map((n) => (
+            <a href={n.href} aria-current={(n.href === '/' ? path === '/' : path.startsWith(n.href)) ? 'page' : undefined}>{n.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main id="inhalt"><slot /></main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>
+          <strong>Sünninghausen</strong> · Ortsteil von <a href="https://www.oelde.de" rel="noopener">Oelde</a> · Kreis Warendorf
+        </div>
+        <div>
+          <a href="/termine.ics">Kalender abonnieren</a> ·{" "}
+          <a href="/impressum/">Impressum</a> ·{" "}
+          <a href="/datenschutz/">Datenschutz</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

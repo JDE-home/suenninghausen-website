@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import EventCard from '../components/EventCard.astro';
+import { upcomingEvents, categories, monthKey, monthLabel } from '../lib/data';
+
+const events = upcomingEvents();
+const groups = new Map<string, typeof events>();
+for (const e of events) {
+  const k = monthKey(e);
+  groups.set(k, [...(groups.get(k) ?? []), e]);
+}
+---
+<Base title="Termine" description="Alle Termine in Sünninghausen: Feste, Gottesdienste, Sport und Vereinsveranstaltungen.">
+  <div class="wrap">
+    <div class="page-title">
+      <h1>Termine</h1>
+      <p>Alle Veranstaltungen der Vereine und Einrichtungen im Dorf. Kalender abonnieren und nichts mehr verpassen.</p>
+      <p style="margin-top:12px"><a class="btn ghost" href="/termine.ics">📅 Kalender abonnieren (.ics)</a></p>
+    </div>
+
+    <div class="filters" role="group" aria-label="Nach Kategorie filtern">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">Alle</button>
+      {categories.map((c) => <button class="chip" type="button" data-filter={c.id} aria-pressed="false">{c.label}</button>)}
+    </div>
+    <p class="empty" id="empty" role="status">Keine Termine in dieser Kategorie.</p>
+
+    <div id="list">
+      {[...groups.entries()].map(([key, list]) => (
+        <section class="month" aria-labelledby={`m-${key}`}>
+          <h2 class="month-title" id={`m-${key}`}>{monthLabel(key)}</h2>
+          <ul class="events">{list.map((e) => <EventCard event={e} />)}</ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</Base>
+
+<script>
+  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+  const items = document.querySelectorAll<HTMLElement>('.event');
+  const months = document.querySelectorAll<HTMLElement>('.month');
+  const empty = document.getElementById('empty')!;
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      const f = chip.dataset.filter!;
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+      items.forEach((i) => (i.hidden = f !== 'all' && i.dataset.cat !== f));
+      months.forEach((m) => (m.hidden = ![...m.querySelectorAll<HTMLElement>('.event')].some((i) => !i.hidden)));
+      empty.style.display = [...items].every((i) => i.hidden) ? 'block' : 'none';
+    }),
+  );
+</script>

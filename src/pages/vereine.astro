@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import ClubCard from '../components/ClubCard.astro';
+import { clubs, links } from '../lib/data';
+---
+<Base title="Vereine" description="Vereine, Kirche und Einrichtungen in Sünninghausen mit Links zu ihren Websites.">
+  <div class="wrap">
+    <div class="page-title">
+      <h1>Vereine &amp; Institutionen</h1>
+      <p>Das Dorfleben lebt vom Engagement vieler. Hier geht es direkt zu den Websites der Vereine.</p>
+    </div>
+    <div class="grid" style="margin-top:24px">
+      {clubs.map((c) => <ClubCard club={c} />)}
+    </div>
+
+    <h2 style="margin-top:48px">Nützliche Links</h2>
+    <div class="grid">
+      {links.map((l) => (
+        <article class="card">
+          <h3>{l.name}</h3>
+          <p>{l.description}</p>
+          <a class="out" href={l.url} rel="noopener" target="_blank">Zur Website</a>
+        </article>
+      ))}
+    </div>
+  </div>
+</Base>

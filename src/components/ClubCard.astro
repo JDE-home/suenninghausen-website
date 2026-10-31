@@ -1,0 +1,13 @@
+---
+import type { Club } from '../lib/data';
+const { club } = Astro.props as { club: Club };
+---
+<article class="card">
+  <span class="icon" aria-hidden="true">{club.icon}</span>
+  <span class="kind">{club.kind}</span>
+  <h3>{club.name}</h3>
+  <p>{club.description}</p>
+  {club.url
+    ? <a class="out" href={club.url} rel="noopener" target="_blank">Zur Website{club.demo && <span class="demo-tag" title={club.note}>Beispiel-Link</span>}</a>
+    : <span class="meta">Website folgt</span>}
+</article>

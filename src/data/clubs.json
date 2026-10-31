@@ -1,0 +1,92 @@
+[
+  {
+    "id": "schuetzenverein",
+    "name": "Schützenverein Sünninghausen",
+    "kind": "Verein",
+    "description": "Traditionsverein des Dorfes. Höhepunkt des Jahres ist das Schützenfest mit Königsumzug.",
+    "url": "https://schuetzen-suenninghausen.example",
+    "icon": "🎯",
+    "demo": true,
+    "note": "Verein existiert laut Recherche; URL und Details sind Platzhalter."
+  },
+  {
+    "id": "heimatverein",
+    "name": "Heimatverein Sünninghausen 1982 e.V.",
+    "kind": "Verein",
+    "description": "Pflege von Geschichte, Brauchtum und Dorfbild: Ausstellungen, Wanderungen und der Adventsbasar.",
+    "url": "https://heimatverein-suenninghausen.example",
+    "icon": "🏡",
+    "demo": true,
+    "note": "Verein laut Heimatforschung Westfalen (Stand 2007); URL ist Platzhalter."
+  },
+  {
+    "id": "karneval",
+    "name": "Sünninghausener Karneval",
+    "kind": "Verein",
+    "description": "Organisiert den einzigen Karnevalsumzug Oeldes am Karnevalssonntag durch das Dorf.",
+    "url": "https://karneval-suenninghausen.example",
+    "icon": "🎭",
+    "demo": true,
+    "note": "Der Umzug ist belegt; Vereinsform und URL sind Platzhalter."
+  },
+  {
+    "id": "pfarrei",
+    "name": "Pfarrgemeinde St. Vitus",
+    "kind": "Kirche",
+    "description": "Katholische Pfarrkirche am Nordkamp 7 mit Gottesdiensten, Erntedank und Martinsumzug.",
+    "url": "https://st-vitus-suenninghausen.example",
+    "icon": "⛪",
+    "demo": true,
+    "note": "Kirche ist belegt; URL ist Platzhalter."
+  },
+  {
+    "id": "feuerwehr",
+    "name": "Löschzug Sünninghausen",
+    "kind": "Feuerwehr",
+    "description": "Freiwillige Feuerwehr im Dorf – mit Sommerfest, Tag der offenen Tür und Nachwuchsarbeit.",
+    "url": "https://feuerwehr-suenninghausen.example",
+    "icon": "🚒",
+    "demo": true,
+    "note": "Erfundenes Beispiel."
+  },
+  {
+    "id": "sportverein",
+    "name": "SV Sünninghausen",
+    "kind": "Sport",
+    "description": "Fußball, Kinderturnen und Gymnastik für alle Altersgruppen.",
+    "url": "https://sv-suenninghausen.example",
+    "icon": "⚽",
+    "demo": true,
+    "note": "Erfundenes Beispiel."
+  },
+  {
+    "id": "landfrauen",
+    "name": "Landfrauen Sünninghausen",
+    "kind": "Verein",
+    "description": "Kochkurse, Vorträge, Ausflüge und der Kaffeenachmittag im Pfarrheim.",
+    "url": "https://landfrauen-suenninghausen.example",
+    "icon": "🥧",
+    "demo": true,
+    "note": "Erfundenes Beispiel."
+  },
+  {
+    "id": "kita",
+    "name": "Kita St. Vitus",
+    "kind": "Kinder",
+    "description": "Kindertagesstätte im Dorf – Gastgeber von Laternenfest und Sommerfest.",
+    "url": "https://kita-suenninghausen.example",
+    "icon": "🧸",
+    "demo": true,
+    "note": "Erfundenes Beispiel."
+  },
+  {
+    "id": "seniorenwg",
+    "name": "Senioren-Wohngemeinschaft Sünninghausen",
+    "kind": "Soziales",
+    "description": "Wohngemeinschaft für Senioren im Dorf, offen für Besuche beim Schützenfest und bei Festen.",
+    "url": "https://seniorenwg-suenninghausen.smmp.de",
+    "icon": "🌻",
+    "demo": false,
+    "note": "Website wurde in der Recherche gefunden."
+  }
+]

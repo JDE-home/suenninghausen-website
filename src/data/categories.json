@@ -1,0 +1,7 @@
+[
+  { "id": "brauchtum", "label": "Brauchtum & Feste", "color": "#b5392e" },
+  { "id": "kirche", "label": "Kirche", "color": "#6b4e9b" },
+  { "id": "sport", "label": "Sport", "color": "#1f7a52" },
+  { "id": "dorfleben", "label": "Dorfleben", "color": "#c47a1a" },
+  { "id": "kinder", "label": "Kinder & Familie", "color": "#1f6fa8" }
+]
