@@ -30,19 +30,20 @@ Die Seite zeigt solange einen sichtbaren Hinweis, bis die echten Daten eingetrag
 
 ## 3. Technologie-Entscheidung
 
-**Astro (statische Website) + JSON-Dateien als Datenquelle. Kein klassisches Backend.**
+**Astro (Node-Server) + JSON-Datenspeicher mit Versionsverlauf + Verwaltungsbereich `/admin/`.**
 
-Begründung: Eine Dorfseite ändert sich selten und hat kaum dynamische Logik. Statisches HTML ist schnell,
-sicher (keine Datenbank/kein Login-Angriffspunkt), kostenlos hostbar (Vercel, Netlify, GitHub Pages)
-und barrierearm. Interaktivität (Filter) läuft mit ~40 Zeilen Vanilla-JS.
+Begründung: Termine müssen von Ehrenamtlichen **ohne Programmierkenntnisse und ohne Neubau** gepflegt werden können.
+Deshalb läuft die Seite als kleiner Node-Server (Astro, serverseitig gerendert) mit Anmeldung. Die Inhalte liegen
+in einer JSON-Datei (kein Datenbankserver nötig, leicht zu sichern); jede Änderung wird als Schnappschuss
+im Verlauf abgelegt und lässt sich wiederherstellen. Interaktivität (Filter) läuft mit ~40 Zeilen Vanilla-JS.
 
 | Schicht | Wahl | Alternative, falls nötig |
 |---|---|---|
 | Frontend | Astro, eigenes CSS (keine Frameworks) | – |
-| Daten | `src/data/*.json` (Termine, Vereine, Dorf-Infos) | später Decap CMS / Markdown |
-| „Backend" | Build-Time-Generierung (iCal-Feed, sortierte Termine) | Serverless-Function fürs Kontaktformular |
-| Pflege | Phase 2: Decap CMS (Git-basiert, Web-Oberfläche) | Formular „Termin melden" |
-| Hosting | Vercel/Netlify, Domain z. B. `suenninghausen.de` | – |
+| Daten | `data/content.json` + `data/history/` (Termine, Vereine), `src/data/*.json` (Kategorien, Links, Galerie) | SQLite/Postgres bei größerem Bedarf |
+| Backend | Astro-Server: Admin-Bereich, Login (scrypt, signierte Cookies, CSRF-Schutz), iCal-Feed | – |
+| Pflege | Verwaltung unter `/admin/` (Termine, Serien, Vereine, Verlauf) | Formular „Termin melden" mit Freigabe |
+| Hosting | Docker/VPS oder Plattform mit dauerhaftem Volume (kein Vercel/Netlify), HTTPS per Reverse-Proxy | – |
 
 ## 4. Informationsarchitektur
 
@@ -51,6 +52,7 @@ und barrierearm. Interaktivität (Filter) läuft mit ~40 Zeilen Vanilla-JS.
 - `/termine.ics` iCal-Feed (für Handy-Kalender)
 - `/vereine/` Vereine & Institutionen mit Links
 - `/dorf/` Über Sünninghausen: Geschichte, Zahlen, nützliche Links (Stadt Oelde, Kreis)
+- `/admin/` Verwaltung (Login): Termine, Vereine, Verlauf, Passwort
 - `/impressum/` und `/datenschutz/` (Pflicht; Vorlagen, Inhalte vom Betreiber zu ergänzen)
 
 ## 5. Umsetzungsphasen
@@ -62,8 +64,8 @@ Projekt-Setup, Layout, Design, Startseite, Termine, Vereine, Dorf, iCal, Beispie
 Vereine anschreiben, echte Termine/URLs/Kontakte sammeln, Fotos, `demo`-Flags entfernen,
 Impressum/Datenschutz ausfüllen (Verantwortlichen festlegen).
 
-**Phase 3 – Pflege durch Dritte**
-Decap CMS oder „Termin einreichen"-Formular mit Freigabe durch Redaktion; Deploy bei jeder Änderung automatisch.
+**Phase 3 – Pflege durch Dritte (Grundlage erledigt)**
+Verwaltung mit Login ist umgesetzt. Offen: weitere Benutzer je Verein mit eingeschränkten Rechten, „Termin einreichen"-Formular mit Freigabe durch die Redaktion, E-Mail-Benachrichtigung.
 
 **Phase 4 – Extras (optional)**
 Terminserien (Wiederholungen), Newsletter/Messenger-Kanal, Karte, Fotogalerie, Müllabfuhr-Kalender,

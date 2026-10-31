@@ -1,9 +1,12 @@
 ---
 import '../styles/global.css';
+import { getContent } from '../lib/store';
 interface Props { title?: string; description?: string }
 const { title, description = 'Termine, Vereine und Neuigkeiten aus Sünninghausen, Ortsteil von Oelde im Münsterland.' } = Astro.props;
 const fullTitle = title ? `${title} · Sünninghausen` : 'Sünninghausen – Das Dorf bei Oelde';
 const path = Astro.url.pathname;
+const { events, clubs } = await getContent();
+const hasDemo = events.some((e) => e.demo) || clubs.some((c) => c.demo);
 const nav = [
   { href: '/', label: 'Start' },
   { href: '/termine/', label: 'Termine' },
@@ -23,9 +26,9 @@ const nav = [
   </head>
   <body>
     <a class="skip" href="#inhalt">Zum Inhalt springen</a>
-    <div class="demo-banner" role="note">
+    {hasDemo && <div class="demo-banner" role="note">
       Entwurf mit Beispielinhalten – Termine und Vereins-Links sind teilweise erfunden und mit „Beispiel“ markiert.
-    </div>
+    </div>}
     <header class="site-header">
       <div class="wrap">
         <a class="brand" href="/"><span aria-hidden="true">⛪</span> Sünninghausen</a>

@@ -1,0 +1,61 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { DUMMY_HASH, SESSION_COOKIE, SESSION_HOURS, createSession, ensureAdmin, findUserByName, loginBlocked, loginFailed, loginSucceeded, verifyPassword } from '../../lib/auth';
+import { isHttps } from '../../lib/admin';
+
+if (Astro.locals.user) return Astro.redirect('/admin/');
+const setup = (await ensureAdmin()) === 'setup-needed';
+let error = '';
+let name = '';
+
+if (Astro.request.method === 'POST' && !setup) {
+  const f = await Astro.request.formData();
+  name = String(f.get('name') ?? '').trim().slice(0, 60);
+  const pw = String(f.get('password') ?? '').slice(0, 200);
+  let ip = 'unbekannt';
+  try { ip = Astro.clientAddress; } catch { /* hinter manchen Proxys nicht verfügbar */ }
+  const keys = [`ip:${ip}`, `u:${name.toLowerCase()}`];
+  const wait = Math.max(...keys.map(loginBlocked));
+  if (wait) {
+    error = `Zu viele Fehlversuche. Bitte in ${wait} Minute${wait > 1 ? 'n' : ''} noch einmal versuchen.`;
+  } else {
+    const user = await findUserByName(name);
+    const ok = await verifyPassword(pw, user?.hash ?? DUMMY_HASH); // immer rechnen → keine Zeitunterschiede
+    if (user && ok) {
+      keys.forEach(loginSucceeded);
+      Astro.cookies.set(SESSION_COOKIE, await createSession(user), {
+        httpOnly: true, sameSite: 'strict', path: '/admin', secure: isHttps(Astro.request, Astro.url), maxAge: SESSION_HOURS * 3600,
+      });
+      return Astro.redirect('/admin/');
+    }
+    keys.forEach(loginFailed);
+    error = 'Benutzername oder Passwort stimmt nicht.';
+  }
+}
+---
+<Admin title="Anmelden">
+  <div class="login">
+    <h1>Verwaltung</h1>
+    <p class="lead-sm">Hier pflegen Sie Termine und Vereine der Website Sünninghausen.</p>
+    {setup ? (
+      <p class="notice err" role="alert">
+        Es ist noch kein Administrator eingerichtet. Bitte beim Start des Servers die Umgebungsvariablen
+        <code>ADMIN_USER</code> und <code>ADMIN_PASSWORD</code> (mindestens 10 Zeichen) setzen.
+      </p>
+    ) : (
+      <form class="form" method="post" autocomplete="on">
+        {error && <p class="notice err" role="alert">{error}</p>}
+        <div class="field">
+          <label for="name">Benutzername</label>
+          <input id="name" name="name" type="text" value={name} autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus />
+        </div>
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <div class="form-actions"><button class="btn" type="submit">Anmelden</button></div>
+      </form>
+    )}
+    <p style="margin-top:18px"><a href="/">← Zur Website</a></p>
+  </div>
+</Admin>

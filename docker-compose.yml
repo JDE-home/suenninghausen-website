@@ -1,0 +1,17 @@
+# Start:  docker compose up -d --build
+# Danach läuft die Seite auf Port 4321. Für HTTPS einen Reverse-Proxy davorsetzen (z. B. Caddy oder
+# der Proxy des Hosters) – das Anmelde-Cookie wird dann automatisch als "Secure" gesetzt.
+services:
+  website:
+    build:
+      context: .
+      args:
+        SITE_URL: ${SITE_URL:-https://suenninghausen.example}
+    restart: unless-stopped
+    ports:
+      - "4321:4321"
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data   # hier liegen alle Inhalte – regelmäßig sichern!

@@ -1,0 +1,67 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { getContent, updateContent } from '../../../lib/store';
+import { parseClub } from '../../../lib/validate';
+
+const me = Astro.locals.user!;
+const id = Astro.params.id!;
+const isNew = id === 'neu';
+const { clubs } = await getContent();
+const existing = isNew ? undefined : clubs.find((c) => c.id === id);
+if (!isNew && !existing) return Astro.redirect('/admin/vereine/?m=notfound');
+
+let val = { name: existing?.name ?? '', kind: existing?.kind ?? 'Verein', description: existing?.description ?? '', url: existing?.url ?? '', icon: existing?.icon ?? '🏡', demo: existing?.demo ?? false };
+let errors: Record<string, string> = {};
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const s = (k: string) => String(f.get(k) ?? '');
+  val = { name: s('name'), kind: s('kind'), description: s('description'), url: s('url'), icon: s('icon'), demo: !!f.get('demo') };
+  const r = parseClub(f, existing);
+  if (r.ok) {
+    await updateContent(me.name, isNew ? `Verein „${r.value.name}“ angelegt` : `Verein „${r.value.name}“ geändert`, (c) => {
+      c.clubs = isNew ? [...c.clubs, r.value] : c.clubs.map((x) => (x.id === id ? r.value : x));
+    });
+    return Astro.redirect(isNew ? '/admin/vereine/?m=created' : '/admin/vereine/?m=saved');
+  }
+  errors = r.errors;
+}
+const invalid = (k: string) => (errors[k] ? 'field invalid' : 'field');
+const kinds = ['Verein', 'Kirche', 'Feuerwehr', 'Sport', 'Kinder', 'Soziales', 'Sonstiges'];
+---
+<Admin title={isNew ? 'Neuer Verein' : 'Verein bearbeiten'} active="vereine">
+  <p><a href="/admin/vereine/">← Zurück zu den Vereinen</a></p>
+  <h1>{isNew ? 'Neuer Verein' : 'Verein bearbeiten'}</h1>
+  {Object.keys(errors).length > 0 && <p class="notice err" role="alert">Bitte die markierten Felder prüfen.</p>}
+  <form class="form" method="post" novalidate>
+    <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+    <div class={invalid('name')}>
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" maxlength="100" value={val.name} required />
+      {errors.name && <span class="err">{errors.name}</span>}
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="kind">Art</label>
+        <select id="kind" name="kind">{kinds.map((k) => <option value={k} selected={val.kind === k}>{k}</option>)}</select>
+      </div>
+      <div class="field">
+        <label for="icon">Symbol <span class="hint">(ein Emoji)</span></label>
+        <input id="icon" name="icon" type="text" maxlength="8" value={val.icon} />
+      </div>
+    </div>
+    <div class={invalid('url')}>
+      <label for="url">Website <span class="hint">(optional)</span></label>
+      <input id="url" name="url" type="url" inputmode="url" maxlength="300" value={val.url} placeholder="https://…" autocapitalize="none" />
+      {errors.url && <span class="err">{errors.url}</span>}
+    </div>
+    <div class="field">
+      <label for="description">Kurzbeschreibung <span class="hint">(bis 400 Zeichen)</span></label>
+      <textarea id="description" name="description" maxlength="400">{val.description}</textarea>
+    </div>
+    <label class="check"><input type="checkbox" name="demo" checked={val.demo} /> Beispieleintrag (wird als „Beispiel“ markiert)</label>
+    <div class="form-actions">
+      <button class="btn" type="submit">Speichern</button>
+      <a class="btn ghost" href="/admin/vereine/">Abbrechen</a>
+    </div>
+  </form>
+</Admin>

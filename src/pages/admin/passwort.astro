@@ -1,0 +1,38 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { MIN_PASSWORD, SESSION_COOKIE, SESSION_HOURS, createSession, findUserById, setPassword, verifyPassword } from '../../lib/auth';
+import { isHttps } from '../../lib/admin';
+
+const me = Astro.locals.user!;
+let error = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const cur = String(f.get('current') ?? '');
+  const next = String(f.get('next') ?? '');
+  const again = String(f.get('again') ?? '');
+  const user = await findUserById(me.id);
+  if (!user || !(await verifyPassword(cur, user.hash))) error = 'Das aktuelle Passwort stimmt nicht.';
+  else if (next.length < MIN_PASSWORD) error = `Das neue Passwort braucht mindestens ${MIN_PASSWORD} Zeichen.`;
+  else if (next !== again) error = 'Die beiden neuen Passwörter sind nicht gleich.';
+  else {
+    await setPassword(me.id, next);
+    const fresh = (await findUserById(me.id))!;
+    Astro.cookies.set(SESSION_COOKIE, await createSession(fresh), {
+      httpOnly: true, sameSite: 'strict', path: '/admin', secure: isHttps(Astro.request, Astro.url), maxAge: SESSION_HOURS * 3600,
+    });
+    return Astro.redirect('/admin/?m=password');
+  }
+}
+---
+<Admin title="Passwort ändern" active="passwort">
+  <h1>Passwort ändern</h1>
+  <p class="lead-sm">Nach der Änderung werden alle anderen Geräte abgemeldet.</p>
+  <form class="form" method="post">
+    <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+    {error && <p class="notice err" role="alert">{error}</p>}
+    <div class="field"><label for="current">Aktuelles Passwort</label><input id="current" name="current" type="password" autocomplete="current-password" required /></div>
+    <div class="field"><label for="next">Neues Passwort <span class="hint">(mindestens {MIN_PASSWORD} Zeichen)</span></label><input id="next" name="next" type="password" autocomplete="new-password" minlength={MIN_PASSWORD} required /></div>
+    <div class="field"><label for="again">Neues Passwort wiederholen</label><input id="again" name="again" type="password" autocomplete="new-password" required /></div>
+    <div class="form-actions"><button class="btn" type="submit">Passwort ändern</button></div>
+  </form>
+</Admin>
