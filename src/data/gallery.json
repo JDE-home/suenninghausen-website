@@ -1,0 +1,6 @@
+[
+  { "id": "kirche", "scene": "kirche", "title": "St. Vitus", "caption": "Die katholische Pfarrkirche am Nordkamp prägt das Ortsbild.", "photo": null, "credit": null },
+  { "id": "sport", "scene": "sport", "title": "Sportanlage „Unter den Eichen“", "caption": "Heimat von BW Sünninghausen, umgeben von alten Eichen.", "photo": null, "credit": null },
+  { "id": "karneval", "scene": "karneval", "title": "Karnevalsumzug", "caption": "Der einzige Karnevalsumzug Oeldes zieht jedes Jahr durchs Dorf.", "photo": null, "credit": null },
+  { "id": "schuetzenfest", "scene": "schuetzen", "title": "Schützenfest", "caption": "Festzelt, Vogelstange und Königsumzug im Sommer.", "photo": null, "credit": null }
+]

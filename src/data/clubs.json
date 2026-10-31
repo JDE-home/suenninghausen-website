@@ -51,13 +51,13 @@
   },
   {
     "id": "sportverein",
-    "name": "SV Sünninghausen",
+    "name": "BW Sünninghausen",
     "kind": "Sport",
-    "description": "Fußball, Kinderturnen und Gymnastik für alle Altersgruppen.",
+    "description": "Blau-Weiß Sünninghausen: Fußball (Herren- und Jugendmannschaften) auf der Sportanlage „Unter den Eichen“, dazu Angebote für Kinder und Gymnastik.",
     "url": "https://sv-suenninghausen.example",
     "icon": "⚽",
     "demo": true,
-    "note": "Erfundenes Beispiel."
+    "note": "Verein „BW Sünninghausen“ ist beim Fußballverband gelistet; Beschreibung und URL sind Platzhalter."
   },
   {
     "id": "landfrauen",
