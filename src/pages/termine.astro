@@ -1,9 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import EventCard from '../components/EventCard.astro';
-import { upcomingEvents, categories, monthKey, monthLabel } from '../lib/data';
+import { upcoming, categories, monthKey, monthLabel } from '../lib/data';
+import { getContent } from '../lib/store';
 
-const events = upcomingEvents();
+const { events: all, clubs } = await getContent();
+const events = upcoming(all);
 const groups = new Map<string, typeof events>();
 for (const e of events) {
   const k = monthKey(e);
@@ -24,11 +26,12 @@ for (const e of events) {
     </div>
     <p class="empty" id="empty" role="status">Keine Termine in dieser Kategorie.</p>
 
+    {events.length === 0 && <p>Zurzeit sind keine Termine eingetragen.</p>}
     <div id="list">
       {[...groups.entries()].map(([key, list]) => (
         <section class="month" aria-labelledby={`m-${key}`}>
           <h2 class="month-title" id={`m-${key}`}>{monthLabel(key)}</h2>
-          <ul class="events">{list.map((e) => <EventCard event={e} />)}</ul>
+          <ul class="events">{list.map((e) => <EventCard event={e} club={clubs.find((c) => c.id === e.club)} />)}</ul>
         </section>
       ))}
     </div>

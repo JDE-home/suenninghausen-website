@@ -1,0 +1,8 @@
+---
+import { SESSION_COOKIE } from '../../lib/auth';
+if (Astro.request.method === 'POST') {
+  Astro.cookies.delete(SESSION_COOKIE, { path: '/admin' });
+  return Astro.redirect('/admin/login/');
+}
+return Astro.redirect('/admin/');
+---

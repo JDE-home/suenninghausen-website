@@ -7,9 +7,12 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "start": "node dist/server/entry.mjs",
+    "test": "astro build && node --test tests/admin.test.mjs"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.9",
     "astro": "^7.4.4"
   }
 }

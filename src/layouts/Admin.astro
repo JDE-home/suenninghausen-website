@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import '../styles/admin.css';
+import { flash } from '../lib/admin';
+
+interface Props { title: string; active?: 'termine' | 'vereine' | 'verlauf' | 'passwort' }
+const { title, active } = Astro.props;
+const user = Astro.locals.user;
+const message = flash(Astro.url);
+const nav = [
+  { id: 'termine', href: '/admin/', label: 'Termine' },
+  { id: 'vereine', href: '/admin/vereine/', label: 'Vereine' },
+  { id: 'verlauf', href: '/admin/verlauf/', label: 'Verlauf' },
+  { id: 'passwort', href: '/admin/passwort/', label: 'Passwort' },
+];
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} · Verwaltung Sünninghausen</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="admin">
+    {user && (
+      <header class="admin-bar">
+        <div class="wrap">
+          <a class="brand" href="/admin/">Verwaltung</a>
+          <nav class="nav" aria-label="Verwaltung">
+            {nav.map((n) => <a href={n.href} aria-current={active === n.id ? 'page' : undefined}>{n.label}</a>)}
+          </nav>
+          <div class="admin-user">
+            <a href="/" target="_blank" rel="noopener">Website ansehen ↗</a>
+            <form method="post" action="/admin/logout/">
+              <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+              <button class="link" type="submit">Abmelden ({user.name})</button>
+            </form>
+          </div>
+        </div>
+      </header>
+    )}
+    <main class="wrap admin-main">
+      {message && <p class="notice ok" role="status">{message}</p>}
+      <slot />
+    </main>
+  </body>
+</html>

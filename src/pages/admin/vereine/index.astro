@@ -1,0 +1,50 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { getContent, updateContent } from '../../../lib/store';
+
+const me = Astro.locals.user!;
+const { events, clubs } = await getContent();
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const id = String(f.get('id') ?? '');
+  const club = clubs.find((c) => c.id === id);
+  if (String(f.get('action')) === 'delete' && club) {
+    if (events.some((e) => e.club === id)) return Astro.redirect('/admin/vereine/?m=inuse');
+    await updateContent(me.name, `Verein „${club.name}“ gelöscht`, (c) => { c.clubs = c.clubs.filter((x) => x.id !== id); });
+    return Astro.redirect('/admin/vereine/?m=deleted');
+  }
+  return Astro.redirect('/admin/vereine/?m=notfound');
+}
+const count = (id: string) => events.filter((e) => e.club === id).length;
+---
+<Admin title="Vereine" active="vereine">
+  <h1>Vereine &amp; Institutionen</h1>
+  <p class="lead-sm">Diese Einträge erscheinen auf der Seite „Vereine“ mit einem Link zur jeweiligen Website.</p>
+  <div class="toolbar"><a class="btn" href="/admin/vereine/neu/">+ Neuer Verein</a></div>
+  {clubs.length === 0 ? <div class="empty-state">Noch keine Vereine eingetragen.</div> : (
+    <ul class="rows">
+      {clubs.map((c) => (
+        <li class="row">
+          <div class="when" aria-hidden="true" style="font-size:1.8rem">{c.icon}</div>
+          <div class="what">
+            <b>{c.name}{c.demo && <span class="demo-tag">Beispiel</span>}</b>
+            <span>{c.kind} · {c.url ?? 'keine Website'} · {count(c.id)} Termin{count(c.id) === 1 ? '' : 'e'}</span>
+          </div>
+          <div class="actions">
+            <a class="btn ghost sm" href={`/admin/vereine/${c.id}/`}>Bearbeiten</a>
+            <details class="confirm">
+              <summary>Löschen</summary>
+              <form class="pop" method="post">
+                <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="id" value={c.id} />
+                <p>„{c.name}“ wirklich löschen?</p>
+                <button class="btn danger sm" type="submit">Ja, löschen</button>
+              </form>
+            </details>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Admin>

@@ -1,0 +1,101 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { getCategory, isPast, byDate } from '../../lib/data';
+import { getContent, updateContent } from '../../lib/store';
+import { newId } from '../../lib/validate';
+
+const me = Astro.locals.user!;
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const action = String(f.get('action') ?? '');
+  const id = String(f.get('id') ?? '');
+  const { events } = await getContent();
+  const ev = events.find((e) => e.id === id);
+
+  if (action === 'delete' && ev) {
+    await updateContent(me.name, `Termin „${ev.title}“ gelöscht`, (c) => { c.events = c.events.filter((e) => e.id !== id); });
+    return Astro.redirect('/admin/?m=deleted');
+  }
+  if (action === 'duplicate' && ev) {
+    const copy = { ...ev, id: newId(ev.title, ev.start), demo: false };
+    await updateContent(me.name, `Termin „${ev.title}“ kopiert`, (c) => { c.events.push(copy); });
+    return Astro.redirect(`/admin/termine/${copy.id}/?m=copied`);
+  }
+  if (action === 'purge-demo') {
+    await updateContent(me.name, 'Beispieleinträge entfernt', (c) => {
+      c.events = c.events.filter((e) => !e.demo);
+      const used = new Set(c.events.map((e) => e.club));
+      c.clubs = c.clubs.filter((cl) => !cl.demo || used.has(cl.id));
+    });
+    return Astro.redirect('/admin/?m=purged');
+  }
+  return Astro.redirect('/admin/?m=notfound');
+}
+
+const showAll = Astro.url.searchParams.get('alle') === '1';
+const { events, clubs } = await getContent();
+const list = byDate(events).filter((e) => showAll || !isPast(e));
+const demoCount = events.filter((e) => e.demo).length + clubs.filter((c) => c.demo).length;
+const clubName = (id: string) => clubs.find((c) => c.id === id)?.name ?? '— Verein fehlt —';
+const wd = new Intl.DateTimeFormat('de-DE', { weekday: 'short', timeZone: 'UTC' });
+const dm = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+const fmt = (d: string) => `${wd.format(new Date(`${d}T12:00:00Z`))}, ${dm.format(new Date(`${d}T12:00:00Z`))}`;
+---
+<Admin title="Termine" active="termine">
+  <h1>Termine</h1>
+  <p class="lead-sm">Neue Termine anlegen, ändern oder löschen. Alles, was Sie speichern, ist sofort auf der Website sichtbar.</p>
+
+  <div class="toolbar">
+    <a class="btn" href="/admin/termine/neu/">+ Neuer Termin</a>
+    <a class="btn ghost" href={showAll ? '/admin/' : '/admin/?alle=1'}>{showAll ? 'Nur kommende zeigen' : 'Auch vergangene zeigen'}</a>
+    <span class="spacer"></span>
+    {demoCount > 0 && (
+      <details class="confirm">
+        <summary>Beispieleinträge entfernen ({demoCount})</summary>
+        <form class="pop" method="post">
+          <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+          <input type="hidden" name="action" value="purge-demo" />
+          <p>Alle als „Beispiel“ markierten Termine und Vereine werden gelöscht. Das lässt sich im Verlauf rückgängig machen.</p>
+          <button class="btn danger sm" type="submit">Ja, entfernen</button>
+        </form>
+      </details>
+    )}
+  </div>
+
+  {list.length === 0 ? (
+    <div class="empty-state">Keine Termine vorhanden. Mit „+ Neuer Termin“ legen Sie den ersten an.</div>
+  ) : (
+    <ul class="rows">
+      {list.map((e) => (
+        <li class:list={['row', { past: isPast(e) }]}>
+          <div class="when">
+            {fmt(e.start)}{e.end && <small>bis {fmt(e.end)}</small>}{e.time && <small>{e.time} Uhr</small>}
+          </div>
+          <div class="what">
+            <b>{e.title}{e.demo && <span class="demo-tag">Beispiel</span>}</b>
+            <span>{clubName(e.club)} · {getCategory(e.category).label} · {e.location}</span>
+          </div>
+          <div class="actions">
+            <a class="btn ghost sm" href={`/admin/termine/${e.id}/`}>Bearbeiten</a>
+            <form method="post">
+              <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+              <input type="hidden" name="action" value="duplicate" />
+              <input type="hidden" name="id" value={e.id} />
+              <button class="btn ghost sm" type="submit" title="Als Vorlage für einen neuen Termin verwenden">Kopieren</button>
+            </form>
+            <details class="confirm">
+              <summary>Löschen</summary>
+              <form class="pop" method="post">
+                <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="id" value={e.id} />
+                <p>„{e.title}“ wirklich löschen?</p>
+                <button class="btn danger sm" type="submit">Ja, löschen</button>
+              </form>
+            </details>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Admin>

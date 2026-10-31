@@ -1,7 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
 import ClubCard from '../components/ClubCard.astro';
-import { clubs, links } from '../lib/data';
+import { links } from '../lib/data';
+import { getContent } from '../lib/store';
+
+const { clubs } = await getContent();
 ---
 <Base title="Vereine" description="Vereine, Kirche und Einrichtungen in Sünninghausen mit Links zu ihren Websites.">
   <div class="wrap">

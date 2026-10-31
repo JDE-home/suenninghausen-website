@@ -3,9 +3,13 @@ import Base from '../layouts/Base.astro';
 import Skyline from '../components/Skyline.astro';
 import EventCard from '../components/EventCard.astro';
 import ClubCard from '../components/ClubCard.astro';
-import { upcomingEvents, clubs, dateParts, getClub } from '../lib/data';
+import Gallery from '../components/Gallery.astro';
+import { upcoming, dateParts } from '../lib/data';
+import { getContent } from '../lib/store';
 
-const events = upcomingEvents();
+const { events: all, clubs } = await getContent();
+const clubOf = (id: string) => clubs.find((c) => c.id === id);
+const events = upcoming(all);
 const [next, ...rest] = events;
 const soon = rest.slice(0, 4);
 ---
@@ -34,11 +38,11 @@ const soon = rest.slice(0, 4);
           <h3>{next.title}</h3>
           <span>{dateParts(next).long}{next.time && <> · {next.time} Uhr</>} · {next.location}</span>
           <span>{next.description}</span>
-          <span>Veranstalter: {getClub(next.club).name}</span>
+          <span>Veranstalter: {clubOf(next.club)?.name}</span>
         </div>
       )}
       <ul class="events" style="margin-top:14px">
-        {soon.map((e) => <EventCard event={e} />)}
+        {soon.map((e) => <EventCard event={e} club={clubOf(e.club)} />)}
       </ul>
     </div>
   </section>
@@ -56,6 +60,13 @@ const soon = rest.slice(0, 4);
   </section>
 
   <section class="block">
+    <div class="wrap">
+      <div class="section-head"><h2>Bilder aus dem Dorf</h2><a href="/dorf/">Mehr ansehen →</a></div>
+      <Gallery limit={4} />
+    </div>
+  </section>
+
+  <section class="block alt">
     <div class="wrap prose">
       <h2>Unser Dorf</h2>
       <p>

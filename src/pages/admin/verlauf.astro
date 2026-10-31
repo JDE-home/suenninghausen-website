@@ -1,0 +1,40 @@
+---
+import Admin from '../../layouts/Admin.astro';
+import { listHistory, restoreHistory } from '../../lib/store';
+
+const me = Astro.locals.user!;
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const ok = await restoreHistory(String(f.get('file') ?? ''), me.name);
+  return Astro.redirect(ok ? '/admin/verlauf/?m=restored' : '/admin/verlauf/?m=notfound');
+}
+const history = await listHistory(50);
+const fmt = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Berlin' });
+---
+<Admin title="Verlauf" active="verlauf">
+  <h1>Verlauf</h1>
+  <p class="lead-sm">Jede Änderung wird gespeichert. Falls etwas versehentlich gelöscht oder verändert wurde, können Sie hier einen früheren Stand wiederherstellen.</p>
+  <ul class="rows">
+    {history.map((h, i) => (
+      <li class="row" style="grid-template-columns: 1fr auto">
+        <div class="what">
+          <b>{h.summary}{i === 0 && <span class="demo-tag" style="background:#e1f3e4;color:#1b5a2b">aktuell</span>}</b>
+          <span>{fmt.format(new Date(h.at))} · {h.by}</span>
+        </div>
+        <div class="actions">
+          {i > 0 && (
+            <details class="confirm">
+              <summary>Wiederherstellen</summary>
+              <form class="pop" method="post">
+                <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+                <input type="hidden" name="file" value={h.file} />
+                <p>Alle Termine und Vereine auf diesen Stand zurücksetzen? Spätere Änderungen werden dabei überschrieben (bleiben aber im Verlauf).</p>
+                <button class="btn danger sm" type="submit">Ja, wiederherstellen</button>
+              </form>
+            </details>
+          )}
+        </div>
+      </li>
+    ))}
+  </ul>
+</Admin>

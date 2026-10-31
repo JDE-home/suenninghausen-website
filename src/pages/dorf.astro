@@ -1,5 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import Gallery from '../components/Gallery.astro';
+import Crest from '../components/Crest.astro';
 ---
 <Base title="Unser Dorf" description="Lage, Geschichte und Besonderheiten von Sünninghausen bei Oelde.">
   <div class="wrap">
@@ -29,6 +31,24 @@ import Base from '../layouts/Base.astro';
         Mittelpunkt des Dorfes ist die katholische Pfarrkirche St. Vitus am Nordkamp. Im Jahreslauf prägen
         Schützenfest, Erntedank, Martinsumzug und der traditionelle Karnevalsumzug am Karnevalssonntag das Dorfleben.
       </p>
+      <h2>Bilder aus dem Dorf</h2>
+    </div>
+    <Gallery />
+
+    <div class="prose" style="margin-top:40px">
+      <Crest />
+      <h2>Unsere Farben</h2>
+      <p>
+        Die Farbwelt der Seite stammt aus dem Wappen der Stadt Oelde, zu der Sünninghausen seit 1970 gehört:
+        ein blauer Schild mit silbernem Halbmond und Stern. Auch der Fußballverein spielt in Blau-Weiß.
+        Das Backsteinrot von Kirche und Höfen setzt den Akzent.
+      </p>
+      <ul class="swatches" aria-label="Farbpalette">
+        <li><i style="background:#1f4e8c"></i>Oelder Blau</li>
+        <li><i style="background:#c9d3de"></i>Silber</li>
+        <li><i style="background:#a8412f"></i>Backstein</li>
+        <li><i style="background:#5d8a3c"></i>Münsterland-Grün</li>
+      </ul>
       <p><small>Quellen: Stadt Oelde, GenWiki, Heimatforschung Westfalen. Texte sind ein erster Entwurf und sollten vom Heimatverein geprüft werden.</small></p>
     </div>
   </div>

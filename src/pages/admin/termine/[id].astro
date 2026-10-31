@@ -1,0 +1,142 @@
+---
+import Admin from '../../../layouts/Admin.astro';
+import { categories } from '../../../lib/data';
+import { getContent, updateContent } from '../../../lib/store';
+import { expandSeries, parseEvent } from '../../../lib/validate';
+
+const me = Astro.locals.user!;
+const id = Astro.params.id!;
+const isNew = id === 'neu';
+const { events, clubs } = await getContent();
+const existing = isNew ? undefined : events.find((e) => e.id === id);
+if (!isNew && !existing) return Astro.redirect('/admin/?m=notfound');
+
+const timeMatch = /^(ab )?(\d{2}:\d{2})$/.exec(existing?.time ?? '');
+let val: Record<string, string | boolean> = {
+  title: existing?.title ?? '', start: existing?.start ?? '', end: existing?.end ?? '',
+  time: timeMatch?.[2] ?? '', ab: !!timeMatch?.[1], location: existing?.location ?? '',
+  description: existing?.description ?? '', club: existing?.club ?? '', category: existing?.category ?? '',
+  demo: existing?.demo ?? false, repeat: 'none', until: '',
+};
+let errors: Record<string, string> = {};
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const s = (k: string) => String(f.get(k) ?? '');
+  val = { title: s('title'), start: s('start'), end: s('end'), time: s('time'), ab: !!f.get('ab'), location: s('location'),
+          description: s('description'), club: s('club'), category: s('category'), demo: !!f.get('demo'), repeat: s('repeat') || 'none', until: s('until') };
+  const r = parseEvent(f, clubs, categories, existing);
+  if (r.ok) {
+    const repeat = isNew && ['weekly', 'biweekly', 'monthly'].includes(s('repeat')) ? s('repeat') : 'none';
+    if (repeat !== 'none' && (!/^\d{4}-\d{2}-\d{2}$/.test(s('until')) || s('until') < r.value.start)) {
+      errors = { until: 'Bitte ein Datum nach dem ersten Termin wählen.' };
+    } else {
+      if (isNew) {
+        const list = expandSeries(r.value, repeat, s('until'));
+        await updateContent(me.name, list.length > 1 ? `Serie „${r.value.title}“ (${list.length} Termine) angelegt` : `Termin „${r.value.title}“ angelegt`, (c) => { c.events.push(...list); });
+        return Astro.redirect(`/admin/?m=created&n=${list.length}`);
+      }
+      await updateContent(me.name, `Termin „${r.value.title}“ geändert`, (c) => { c.events = c.events.map((e) => (e.id === id ? r.value : e)); });
+      return Astro.redirect('/admin/?m=saved');
+    }
+  } else errors = r.errors;
+}
+const invalid = (k: string) => (errors[k] ? 'field invalid' : 'field');
+---
+<Admin title={isNew ? 'Neuer Termin' : 'Termin bearbeiten'} active="termine">
+  <p><a href="/admin/">← Zurück zur Terminliste</a></p>
+  <h1>{isNew ? 'Neuer Termin' : 'Termin bearbeiten'}</h1>
+
+  {Object.keys(errors).length > 0 && <p class="notice err" role="alert">Bitte die markierten Felder prüfen.</p>}
+
+  <form class="form" method="post" novalidate>
+    <input type="hidden" name="_csrf" value={Astro.locals.csrf} />
+
+    <div class={invalid('title')}>
+      <label for="title">Titel</label>
+      <input id="title" name="title" type="text" maxlength="120" value={val.title as string} required placeholder="z. B. Adventsbasar" aria-describedby={errors.title ? 'e-title' : undefined} />
+      {errors.title && <span class="err" id="e-title">{errors.title}</span>}
+    </div>
+
+    <div class="grid2">
+      <div class={invalid('start')}>
+        <label for="start">Datum</label>
+        <input id="start" name="start" type="date" value={val.start as string} required />
+        {errors.start && <span class="err">{errors.start}</span>}
+      </div>
+      <div class={invalid('end')}>
+        <label for="end">Bis (nur bei mehrtägigen Terminen)</label>
+        <input id="end" name="end" type="date" value={val.end as string} />
+        {errors.end && <span class="err">{errors.end}</span>}
+      </div>
+    </div>
+
+    <div class={invalid('time')}>
+      <label for="time">Uhrzeit <span class="hint">(optional)</span></label>
+      <input id="time" name="time" type="time" value={val.time as string} />
+      <label class="check"><input type="checkbox" name="ab" checked={val.ab as boolean} /> Als „ab 15:00 Uhr“ anzeigen (Beginn offen)</label>
+      {errors.time && <span class="err">{errors.time}</span>}
+    </div>
+
+    <div class={invalid('location')}>
+      <label for="location">Ort</label>
+      <input id="location" name="location" type="text" maxlength="120" value={val.location as string} required placeholder="z. B. Pfarrheim" />
+      {errors.location && <span class="err">{errors.location}</span>}
+    </div>
+
+    <div class="grid2">
+      <div class={invalid('club')}>
+        <label for="club">Veranstalter</label>
+        <select id="club" name="club" required>
+          <option value="" disabled selected={!val.club}>Bitte wählen …</option>
+          {clubs.map((c) => <option value={c.id} selected={val.club === c.id}>{c.name}</option>)}
+        </select>
+        {errors.club && <span class="err">{errors.club}</span>}
+        <span class="hint">Fehlt ein Verein? <a href="/admin/vereine/neu/">Verein anlegen</a></span>
+      </div>
+      <div class={invalid('category')}>
+        <label for="category">Kategorie</label>
+        <select id="category" name="category" required>
+          <option value="" disabled selected={!val.category}>Bitte wählen …</option>
+          {categories.map((c) => <option value={c.id} selected={val.category === c.id}>{c.label}</option>)}
+        </select>
+        {errors.category && <span class="err">{errors.category}</span>}
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="description">Beschreibung <span class="hint">(optional, bis 600 Zeichen)</span></label>
+      <textarea id="description" name="description" maxlength="600">{val.description as string}</textarea>
+    </div>
+
+    {isNew && (
+      <fieldset class="series">
+        <legend>Wiederholung</legend>
+        <div class="grid2">
+          <div class="field">
+            <label for="repeat">Dieser Termin findet …</label>
+            <select id="repeat" name="repeat">
+              <option value="none" selected={val.repeat === 'none'}>einmalig statt</option>
+              <option value="weekly" selected={val.repeat === 'weekly'}>jede Woche statt</option>
+              <option value="biweekly" selected={val.repeat === 'biweekly'}>alle 2 Wochen statt</option>
+              <option value="monthly" selected={val.repeat === 'monthly'}>jeden Monat statt</option>
+            </select>
+          </div>
+          <div class={invalid('until')}>
+            <label for="until">… bis zum</label>
+            <input id="until" name="until" type="date" value={val.until as string} />
+            {errors.until && <span class="err">{errors.until}</span>}
+          </div>
+        </div>
+        <span class="hint">Es werden einzelne Termine angelegt (höchstens 60). Jeder lässt sich danach einzeln ändern oder löschen.</span>
+      </fieldset>
+    )}
+
+    <label class="check"><input type="checkbox" name="demo" checked={val.demo as boolean} /> Beispieltermin (wird als „Beispiel“ markiert)</label>
+
+    <div class="form-actions">
+      <button class="btn" type="submit">Speichern</button>
+      <a class="btn ghost" href="/admin/">Abbrechen</a>
+    </div>
+  </form>
+</Admin>
