@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Skyline from '../components/Skyline.astro';
 import EventCard from '../components/EventCard.astro';
 import ClubCard from '../components/ClubCard.astro';
+import Gallery from '../components/Gallery.astro';
 import { upcomingEvents, clubs, dateParts, getClub } from '../lib/data';
 
 const events = upcomingEvents();
@@ -56,6 +57,13 @@ const soon = rest.slice(0, 4);
   </section>
 
   <section class="block">
+    <div class="wrap">
+      <div class="section-head"><h2>Bilder aus dem Dorf</h2><a href="/dorf/">Mehr ansehen →</a></div>
+      <Gallery limit={4} />
+    </div>
+  </section>
+
+  <section class="block alt">
     <div class="wrap prose">
       <h2>Unser Dorf</h2>
       <p>

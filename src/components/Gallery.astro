@@ -1,0 +1,35 @@
+---
+import Scene from './Scene.astro';
+import galleryRaw from '../data/gallery.json';
+
+interface Props { limit?: number }
+const { limit } = Astro.props;
+type Item = { id: string; scene: 'kirche' | 'sport' | 'karneval' | 'schuetzen'; title: string; caption: string; photo: string | null; credit: string | null };
+const items = (galleryRaw as Item[]).slice(0, limit);
+
+// Echte Fotos aus src/assets/photos werden automatisch erkannt.
+const photos = import.meta.glob('../assets/photos/*.{jpg,jpeg,png,webp,avif}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const photoUrl = (file: string | null) => (file ? photos[`../assets/photos/${file}`] : undefined);
+---
+<ul class="gallery">
+  {items.map((i) => {
+    const src = photoUrl(i.photo);
+    return (
+      <li>
+        <figure class="shot">
+          <div class="frame">
+            {src
+              ? <img src={src} alt={`${i.title}: ${i.caption}`} loading="lazy" decoding="async" />
+              : <Scene name={i.scene} label={`Illustration: ${i.title}`} />}
+            {!src && <span class="badge">Illustration · Foto folgt</span>}
+          </div>
+          <figcaption>
+            <b>{i.title}</b>
+            {i.caption}
+            {src && i.credit && <span class="credit">{i.credit}</span>}
+          </figcaption>
+        </figure>
+      </li>
+    );
+  })}
+</ul>

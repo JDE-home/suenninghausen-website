@@ -1,0 +1,77 @@
+---
+// Illustrierte Bildmotive aus dem Dorf (Platzhalter, bis echte Fotos vorliegen).
+export interface Props { name: 'kirche' | 'sport' | 'karneval' | 'schuetzen'; label: string }
+const { name, label } = Astro.props;
+---
+<svg viewBox="0 0 300 200" role="img" aria-label={label} preserveAspectRatio="xMidYMid slice" class="scene">
+  <rect width="300" height="200" fill="#cfe3f5"/>
+  <ellipse cx="70" cy="34" rx="30" ry="9" fill="#fff" opacity=".85"/><ellipse cx="96" cy="28" rx="20" ry="8" fill="#fff" opacity=".85"/>
+  <ellipse cx="230" cy="48" rx="28" ry="8" fill="#fff" opacity=".85"/>
+
+  {name === 'kirche' && (<>
+    <path d="M0 150 Q80 128 160 146 T300 138 V200 H0Z" fill="#9cc47a"/>
+    <path d="M0 175 Q100 160 200 172 T300 168 V200 H0Z" fill="#78a554"/>
+    <rect x="128" y="64" width="34" height="86" fill="#a8412f"/>
+    <polygon points="122,65 145,10 168,65" fill="#4f3329"/>
+    <rect x="144" y="0" width="2.5" height="14" fill="#4f3329"/><rect x="140" y="5" width="10" height="2.5" fill="#4f3329"/>
+    <rect x="137" y="80" width="16" height="24" rx="8" fill="#2b2420"/>
+    <circle cx="145" cy="54" r="6" fill="#f5e7c6" stroke="#4f3329" stroke-width="1.5"/>
+    <rect x="162" y="112" width="70" height="38" fill="#b9503c"/>
+    <polygon points="157,113 197,92 237,113" fill="#6a4435"/>
+    <rect x="172" y="124" width="9" height="16" rx="4.5" fill="#f5d98a"/><rect x="192" y="124" width="9" height="16" rx="4.5" fill="#f5d98a"/><rect x="212" y="124" width="9" height="16" rx="4.5" fill="#f5d98a"/>
+    <rect x="102" y="128" width="26" height="22" fill="#c9553f"/><polygon points="98,129 115,114 132,129" fill="#4a3a33"/>
+    <g fill="#3f6427"><circle cx="70" cy="140" r="16"/><circle cx="256" cy="136" r="14"/></g>
+    <g fill="#5c3b2e"><rect x="68" y="150" width="4" height="12"/><rect x="254" y="146" width="4" height="12"/></g>
+    <path d="M140 200 Q150 172 148 150" stroke="#d8c59a" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </>)}
+
+  {name === 'sport' && (<>
+    <path d="M0 120 Q150 100 300 118 V200 H0Z" fill="#78a554"/>
+    <polygon points="60,200 240,200 210,128 90,128" fill="#5d8a3c"/>
+    <g stroke="#fff" stroke-width="2" fill="none" opacity=".9">
+      <polyline points="60,200 90,128 210,128 240,200 60,200"/><line x1="75" y1="164" x2="225" y2="164"/>
+      <ellipse cx="150" cy="164" rx="22" ry="8"/>
+    </g>
+    <g stroke="#fff" stroke-width="3" fill="none"><polyline points="128,128 128,108 172,108 172,128"/></g>
+    <g stroke="#fff" stroke-width=".8" opacity=".7"><line x1="136" y1="108" x2="136" y2="128"/><line x1="144" y1="108" x2="144" y2="128"/><line x1="152" y1="108" x2="152" y2="128"/><line x1="160" y1="108" x2="160" y2="128"/><line x1="128" y1="118" x2="172" y2="118"/></g>
+    <rect x="258" y="62" width="3" height="70" fill="#5c3b2e"/><rect x="261" y="64" width="22" height="14" fill="#1f4e8c"/><rect x="261" y="71" width="22" height="7" fill="#fff"/>
+    <g fill="#3f6427"><circle cx="36" cy="102" r="26"/><circle cx="62" cy="112" r="20"/><circle cx="262" cy="104" r="22"/><circle cx="238" cy="114" r="16"/></g>
+    <g fill="#5c3b2e"><rect x="33" y="118" width="6" height="22"/><rect x="59" y="125" width="5" height="16"/><rect x="259" y="118" width="5" height="22"/></g>
+    <circle cx="150" cy="176" r="5" fill="#fff" stroke="#2b2420" stroke-width="1"/>
+  </>)}
+
+  {name === 'karneval' && (<>
+    <rect y="140" width="300" height="60" fill="#8f98a3"/>
+    <g><rect x="10" y="80" width="64" height="62" fill="#c9553f"/><polygon points="4,81 42,52 80,81" fill="#4a3a33"/>
+       <rect x="224" y="74" width="66" height="68" fill="#e2c38a"/><polygon points="218,75 257,46 296,75" fill="#6a4435"/>
+       <rect x="120" y="92" width="56" height="50" fill="#b9503c"/><polygon points="114,93 148,68 182,93" fill="#4a3a33"/></g>
+    <path d="M0 60 Q150 90 300 60" stroke="#5c3b2e" stroke-width="1.5" fill="none"/>
+    <g>
+      <polygon points="20,66 32,66 26,80" fill="#1f4e8c"/><polygon points="48,70 60,70 54,84" fill="#fff"/><polygon points="76,74 88,74 82,88" fill="#b5392e"/>
+      <polygon points="104,77 116,77 110,91" fill="#1f4e8c"/><polygon points="132,79 144,79 138,93" fill="#fff"/><polygon points="160,79 172,79 166,93" fill="#b5392e"/>
+      <polygon points="188,77 200,77 194,91" fill="#1f4e8c"/><polygon points="216,74 228,74 222,88" fill="#fff"/><polygon points="244,70 256,70 250,84" fill="#b5392e"/>
+      <polygon points="270,66 282,66 276,80" fill="#1f4e8c"/>
+    </g>
+    <rect x="86" y="132" width="130" height="30" rx="3" fill="#1f4e8c"/>
+    <rect x="96" y="112" width="48" height="22" fill="#fff" stroke="#1f4e8c" stroke-width="2"/>
+    <circle cx="112" cy="168" r="11" fill="#2b2420"/><circle cx="112" cy="168" r="4" fill="#c9d3de"/>
+    <circle cx="194" cy="168" r="11" fill="#2b2420"/><circle cx="194" cy="168" r="4" fill="#c9d3de"/>
+    <g><circle cx="172" cy="118" r="8" fill="#f2c9a0"/><polygon points="162,114 172,92 182,114" fill="#b5392e"/><rect x="164" y="125" width="16" height="9" fill="#e0a82e"/></g>
+    <g><circle cx="40" cy="30" r="3" fill="#b5392e"/><circle cx="210" cy="22" r="3" fill="#1f4e8c"/><circle cx="258" cy="36" r="3" fill="#e0a82e"/><circle cx="130" cy="40" r="3" fill="#fff"/><circle cx="170" cy="30" r="2.5" fill="#b5392e"/></g>
+  </>)}
+
+  {name === 'schuetzen' && (<>
+    <path d="M0 150 Q150 130 300 148 V200 H0Z" fill="#9cc47a"/>
+    <path d="M0 178 Q150 164 300 176 V200 H0Z" fill="#78a554"/>
+    <polygon points="60,150 60,110 150,70 240,110 240,150" fill="#fff"/>
+    <polygon points="60,110 150,70 240,110 215,110 150,82 85,110" fill="#1f4e8c"/>
+    <g fill="#1f4e8c"><rect x="60" y="116" width="15" height="34"/><rect x="90" y="116" width="15" height="34"/><rect x="120" y="116" width="15" height="34"/><rect x="165" y="116" width="15" height="34"/><rect x="195" y="116" width="15" height="34"/><rect x="225" y="116" width="15" height="34"/></g>
+    <rect x="142" y="120" width="16" height="30" fill="#2b2420"/>
+    <rect x="148" y="52" width="4" height="20" fill="#5c3b2e"/>
+    <rect x="266" y="40" width="5" height="112" fill="#5c3b2e"/>
+    <rect x="258" y="40" width="21" height="4" fill="#5c3b2e"/>
+    <path d="M262 28 q4 -10 10 -3 q5 3 5 8 l-6 -2 l-3 5 z" fill="#b9503c"/>
+    <rect x="30" y="68" width="3" height="84" fill="#5c3b2e"/><rect x="33" y="68" width="26" height="16" fill="#1f4e8c"/><rect x="33" y="76" width="26" height="8" fill="#fff"/>
+    <g fill="#3f6427"><circle cx="24" cy="150" r="14"/><circle cx="286" cy="160" r="12"/></g>
+  </>)}
+</svg>

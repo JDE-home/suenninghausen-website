@@ -75,3 +75,23 @@ Suche, Mehrsprachigkeit.
 2. Welche Vereine sollen aufgenommen werden, und gibt es schon Websites?
 3. Wer pflegt Termine – eine Person oder jeder Verein selbst?
 4. Wunsch-Domain und Farben/Wappen/Logo vorhanden?
+
+## 7. Farbgebung & Bilder (Stand: zweite Iteration)
+
+**Recherche:** Sünninghausen hat kein eigenes Wappen. Maßgeblich ist das Wappen der Stadt Oelde
+(seit 1910): *in Blau ein nach oben offener silberner Halbmond, darüber ein sechsstrahliger silberner Stern.*
+Der Fußballverein heißt „BW Sünninghausen" (Blau-Weiß) und spielt auf der Sportanlage „Unter den Eichen".
+
+**Palette:** Oelder Blau `#1f4e8c` (Primärfarbe), Silber `#c9d3de`, Backstein `#a8412f` (Akzent, Kirche/Höfe),
+Münsterland-Grün `#5d8a3c` (Felder). Dunkelmodus über CSS-Variablen.
+
+**Bilder:** Fotos aus dem Dorf konnten in der Entwicklungsumgebung nicht geladen werden
+(Wikimedia Commons, oelde.de und fussball.de sind gesperrt). Bis echte Fotos vorliegen, zeigt die Galerie
+illustrierte Motive (St. Vitus, Sportanlage, Karnevalsumzug, Schützenfest), klar als „Illustration · Foto folgt" gekennzeichnet.
+Echte Fotos: Datei in `src/assets/photos/` legen und in `src/data/gallery.json` eintragen – sie ersetzen die Illustration
+automatisch. Nur Fotos mit geklärten Nutzungsrechten verwenden; die Quelle wird unter dem Bild angezeigt.
+
+**Designprinzipien (nach Emil Kowalski, Skill `emil-design-engineering`):**
+Hover nur bei Maus (`hover: hover`), Tippflächen ≥ 44 px, keine `transition: all`, Animationen nur `transform`/`opacity`
+mit Ease-out (≤ 250 ms) und `prefers-reduced-motion`, Rahmen als Schatten-Ring, Tabellenziffern bei Datumszahlen,
+neutrale Fokus-Outlines, `text-wrap: balance` bei Überschriften, dekorative Grafiken ohne Pointer-Events.
